@@ -1,5 +1,7 @@
 FROM geopython/pygeoapi:0.19.0
 
+LABEL org.opencontainers.image.source https://github.com/EOEPCA/eoapi-maps-plugin
+
 RUN mkdir /emp
 WORKDIR /emp
 
