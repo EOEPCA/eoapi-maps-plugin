@@ -1,0 +1,5 @@
+pytest
+flake8==7.1.1
+mypy==1.11.2
+black==24.8.0
+types-requests
