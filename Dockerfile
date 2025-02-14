@@ -18,4 +18,4 @@ RUN python3 setup.py install
 EXPOSE 5000
 
 ENTRYPOINT [ "" ]
-CMD ["gunicorn", "pygeoapi.flask_app:APP", "--workers=4", "--bind=0.0.0.0:5000"]
+CMD ["gunicorn", "pygeoapi.flask_app:APP", "--workers=4", "--bind=0.0.0.0:5000", "--reload", "--reload-extra-file=/config/config.yaml"]

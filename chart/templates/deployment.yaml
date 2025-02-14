@@ -31,14 +31,10 @@ spec:
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       initContainers:
-        - name: openapi-setup
+        - name: config-setup
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           command:
-          - pygeoapi
-          - openapi
-          - generate
-          - /etc/config.yaml
-          - --output-file=/config/openapi.yaml
+            - ./scripts/init.sh
           volumeMounts:
           - mountPath: /etc/config.yaml
             name: config
@@ -53,7 +49,7 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
             - name: PYGEOAPI_CONFIG
-              value: /etc/config.yaml
+              value: /config/config.yaml
             - name: PYGEOAPI_OPENAPI
               value: /config/openapi.yaml
           {{- with .Values.env }}

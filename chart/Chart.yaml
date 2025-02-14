@@ -4,5 +4,5 @@ description: A Helm chart containing a deployment of pygeoapi and eoapi-maps-plu
 
 type: application
 
-version: 0.0.0
-appVersion: latest
+version: 0.0.1
+appVersion: 0.0.1
