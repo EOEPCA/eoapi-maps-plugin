@@ -149,10 +149,7 @@ def main():
         )
         for collection in stac_collections["collections"]:
             is_pygeoapi_resource = pygeoapi_resources.get(collection["id"], False)
-            if not is_pygeoapi_resource:
-                continue
-            has_pygeoapi_resource = pygeoapi_resources.get(collection["id"], False)
-            if not has_pygeoapi_resource and is_renderable(collection):
+            if not is_pygeoapi_resource and is_renderable(collection):
                 LOGGER.info(f"Creating collection {collection['id']} in pygeoapi")
 
                 description = collection.get("description", "")
@@ -205,13 +202,18 @@ def main():
         stac_collections, pygeoapi_resources = get_data(
             eoapi_url, pygeoapi_resource_url
         )
-        collection_ids = {
-            collection["id"]
-            for collection in stac_collections["collections"]
-            if is_renderable(collection)
-        }
-        resource_ids = set(pygeoapi_resources.keys())
-        collections_to_delete = list(collection_ids - resource_ids)
+        collection_ids = [
+            collection["id"] for collection in stac_collections["collections"]
+        ]
+
+        collections_to_delete = []
+        for id, resource in pygeoapi_resources.items():
+            if id not in collection_ids:
+                collections_to_delete.append(id)
+            elif not is_renderable(
+                next(filter(lambda x: x["id"] == id, stac_collections["collections"]))
+            ):
+                collections_to_delete.append(id)
 
         for id in collections_to_delete:
             LOGGER.info(f"Deleting collection {id} from pygeoapi")
