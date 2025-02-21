@@ -2,7 +2,7 @@
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: {{ include "eoapi-maps-plugin.fullname" . }}
+  name: {{ include "eoapi-maps-plugin.fullname" . }}-sync
   labels:
     {{- include "eoapi-maps-plugin.labels" . | nindent 4 }}
 spec:

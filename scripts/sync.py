@@ -3,9 +3,13 @@ import argparse
 import logging
 from requests.adapters import HTTPAdapter, Retry
 
-logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s")
-
 LOGGER = logging.getLogger("pygeoapi-stacapi-sync")
+handler = logging.StreamHandler()
+formatter = logging.Formatter("%(asctime)s [%(name)-12s] %(levelname)-8s %(message)s")
+handler.setFormatter(formatter)
+LOGGER.addHandler(handler)
+LOGGER.setLevel(logging.INFO)
+
 SESSION = requests.Session()
 retries = Retry(total=5, backoff_factor=0.1, status_forcelist=[500, 502, 503, 504])
 SESSION.mount("http://", HTTPAdapter(max_retries=retries))
@@ -62,6 +66,7 @@ def validate_links(links: list[dict], extract_missing_mimetypes: bool) -> list[d
                         f"Failed to extract mimetype for link {link['href']}, status code {r.status_code}, defaulting to application/octet-stream"
                     )
                     link["type"] = "application/octet-stream"
+                    continue
                 mimetype = r.headers.get("Content-Type", "application/octet-stream")
                 link["type"] = mimetype
             else:
@@ -142,9 +147,6 @@ def main():
                 links = validate_links(
                     collection.get("links", []), extract_missing_mimetypes
                 )
-                default_asset = collection[RENDER_EXTENSION_NAME][default_asset][
-                    "assets"
-                ][0]
                 collection_id = collection["id"]
                 title = collection["title"]
 
@@ -164,17 +166,13 @@ def main():
                         "links": links,
                         "providers": [
                             {
-                                "data": f"{eoapi_url}/raster",
+                                "data": f"{eoapi_url}/stac/collections/{collection_id}",
                                 "format": {
                                     "mimetype": "application/png",
                                     "name": "png",
                                 },
                                 "name": "eoapi_maps_plugin.EOAPIProvider",
                                 "type": "map",
-                                "options": {
-                                    "default_asset": default_asset,
-                                    "stac_collection": collection_id,
-                                },
                             }
                         ],
                         "title": title,

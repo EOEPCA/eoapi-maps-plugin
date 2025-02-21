@@ -6,7 +6,8 @@ RUN mkdir /emp
 WORKDIR /emp
 
 ENV PYGEOAPI_CONFIG \
-    PYGEOAPI_OPENAPI
+    PYGEOAPI_OPENAPI \
+    PYTHONUNBUFFERED=1
 
 COPY requirements.txt .
 RUN python3 -m pip install -r requirements.txt
