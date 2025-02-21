@@ -208,7 +208,7 @@ def main():
         for id in collections_to_delete:
             LOGGER.info(f"Deleting collection {id} from pygeoapi")
             r = SESSION.delete(f"{pygeoapi_resource_url}/{id}")
-            if r >= 400:
+            if r.status_code >= 400:
                 LOGGER.error(
                     f"Failed to delete collection {collection['id']} in pygeoapi. Status code {r.status_code}. Response: {r.text}"
                 )
