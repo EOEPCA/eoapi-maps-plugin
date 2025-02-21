@@ -29,10 +29,18 @@ spec:
                 - "scripts/sync.py"
                 - {{ .Values.sync.eoapiUrl | required ".Values.sync.eoapiUrl is required." }}
                 - {{ .Values.sync.pygeoapiUrl | required ".Values.sync.pygeoapiUrl is required." }}
-                - {{ .Values.sync.create | ternary "-c" "" | quote }}
-                - {{ .Values.sync.update | ternary "-u" "" | quote }}
-                - {{ .Values.sync.delete | ternary "-d" "" | quote }}
-                - {{ .Values.sync.forceLinkMimetypeCheck | ternary "-l" "" | quote }}
+                {{- if .Values.sync.create }}
+                - "-c"
+                {{- end }}
+                {{- if .Values.sync.delete }}
+                - "-d"
+                {{- end }}
+                {{- if .Values.sync.update }}
+                - "-u"
+                {{- end }}
+                {{- if .Values.sync.forceLinkMimetypeCheck }}
+                - "-l"
+                {{- end }}
               env:
                 {{- range $key, $value := .Values.env }}
                 - name: {{ $key }}
