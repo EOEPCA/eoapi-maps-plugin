@@ -135,6 +135,9 @@ def main():
     # have the render extension or visual asset
     if create:
         for collection in stac_collections["collections"]:
+            is_pygeoapi_resource = pygeoapi_resources.get(collection["id"], False)
+            if not is_pygeoapi_resource:
+                continue
             is_collection_renderable = collection.get(
                 RENDER_EXTENSION_NAME
             ) or collection.get("item_assets", {}).get(VISUAL_ASSET_NAME, False)
@@ -181,7 +184,7 @@ def main():
                 }
 
                 r = SESSION.post(pygeoapi_resource_url, json=json)
-                if r >= 400:
+                if r.status_code >= 400:
                     LOGGER.error(
                         f"Failed to create collection {collection['id']} in pygeoapi. Status code {r.status_code}. Response: {r.text}"
                     )
@@ -223,7 +226,7 @@ def main():
                         f"{pygeoapi_resource_url}/{collection['id']}",
                         json=diff,
                     )
-                    if r >= 400:
+                    if r.status_code >= 400:
                         LOGGER.error(
                             f"Failed to update collection {collection['id']} in pygeoapi. Status code {r.status_code}. Response: {r.text}"
                         )
