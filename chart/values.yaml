@@ -79,3 +79,4 @@ sync:
   update: true
   delete: true
   forceLinkMimetypeCheck: false
+  backoffLimit: 1

@@ -12,6 +12,7 @@ spec:
   concurrencyPolicy: Forbid
   jobTemplate:
     spec:
+      backoffLimit: {{ .Values.sync.backoffLimit }}
       template:
         spec:
           {{- with .Values.imagePullSecrets }}
@@ -23,7 +24,7 @@ spec:
             - name: {{ include "eoapi-maps-plugin.name" . }}
               image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
               imagePullPolicy: {{ .Values.image.pullPolicy }}
-              command: ["python"]
+              command: ["python3"]
               args:
                 - "scripts/sync.py"
                 - {{ .Values.sync.eoapiUrl | required ".Values.sync.eoapiUrl is required." }}
