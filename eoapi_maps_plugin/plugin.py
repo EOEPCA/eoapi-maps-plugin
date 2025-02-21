@@ -2,11 +2,15 @@ from pygeoapi.provider.base import (
     BaseProvider,
     ProviderConnectionError,
     ProviderQueryError,
+    ProviderItemNotFoundError,
 )
 import requests
+from urllib.parse import urlparse
 
 
 class EOAPIProvider(BaseProvider):
+
+    FALLBACK_ASSET = "visual"
 
     def __init__(self, provider_def, *args, **kwargs):
         """Inherit from parent class"""
@@ -23,31 +27,34 @@ class EOAPIProvider(BaseProvider):
         style=None,
         **kwargs,
     ):
+        response = requests.get(self.data)
+        self._handle_upstream_error(response.text, response.status_code)
+
+        collection = response.json()
+        if not style:
+            style = "default"
+
+        render_data = self._get_render_data(collection, style)
+
+        eoapi_raster_url = self._get_eoapi_raster_url()
         search_data = {
-            "collections": [self.options["stac_collection"]],
+            "collections": [collection["id"]],
             "bbox": bbox,
             "datetime": datetime_,
         }
-        response = requests.post(f"{self.data}/searches/register", json=search_data)
-
-        if response.status_code >= 500:
-            raise ProviderConnectionError(response.text)
-        elif response.status_code >= 400:
-            raise ProviderQueryError(response.text)
+        eoapi_search_url = f"{eoapi_raster_url}/searches/register"
+        response = requests.post(eoapi_search_url, json=search_data)
+        self._handle_upstream_error(response.text, response.status_code)
 
         search_id = response.json()["id"]
-        render_data = {"assets": self.options["default_asset"]}
 
-        if style:
-            render_data["colormap_name"] = style
-
-        eoapi_get_template = (
+        eoapi_get_search_template = (
             "{url}/searches/{search_id}/bbox/{bbox}/{width}x{height}.{format}"
         )
 
         response = requests.get(
-            eoapi_get_template.format(
-                url=self.data,
+            eoapi_get_search_template.format(
+                url=eoapi_raster_url,
                 search_id=search_id,
                 bbox=",".join(map(str, bbox)),
                 width=width,
@@ -56,10 +63,56 @@ class EOAPIProvider(BaseProvider):
             ),
             params=render_data,
         )
-
-        if response.status_code >= 500:
-            raise ProviderConnectionError(response.text)
-        elif response.status_code >= 400:
-            raise ProviderQueryError(response.text)
+        self._handle_upstream_error(response.text, response.status_code)
 
         return response.content
+
+    def _handle_upstream_error(self, response_text, response_code):
+        if response_code < 300:
+            return
+        if response_code >= 500:
+            raise ProviderConnectionError(
+                response_text, user_msg="Internal server error"
+            )
+        if response_code == 404:
+            ProviderItemNotFoundError(
+                response_text,
+                user_msg=f"Item not found",
+            )
+        if response_code >= 400:
+            raise ProviderQueryError(
+                response_text, user_msg=f"Bad request: {response_text}"
+            )
+
+    def _get_render_data(
+        self, collection: dict, style: str = "default", fallback_asset: str = "visual"
+    ) -> dict:
+        if assets := collection.get("renders", {}).get(style, {}).get("assets"):
+            colormap_name = collection["renders"][style].get("colormap_name")
+            resampling = collection["renders"][style].get("resampling")
+            expression = collection["renders"][style].get("expression")
+            render_data = {
+                "assets": assets,
+                "colormap_name": colormap_name,
+                "resampling": resampling,
+                "expression": expression,
+            }
+        elif collection.get("item_assets", {}).get(self.FALLBACK_ASSET):
+            render_data = {"assets": [self.FALLBACK_ASSET]}
+        else:
+            raise ProviderQueryError(
+                "Collection does not have rendering configured.",
+                user_msg=(
+                    f"""Collection {collection["id"]} does not have rendering enabled. """
+                    f"""Ensure the collection has the render extension with a `{style}` """
+                    f"""key render, or an asset with the `{self.FALLBACK_ASSET}` key set"""
+                    """as fallback"""
+                ),
+            )
+
+        return render_data
+
+    def _get_eoapi_raster_url(self) -> str:
+        url = urlparse(self.data)
+
+        return f"{url.scheme}://{url.netloc}/raster/"

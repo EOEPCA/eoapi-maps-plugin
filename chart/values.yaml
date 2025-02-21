@@ -67,3 +67,15 @@ tolerations: []
 affinity: {}
 
 config: {}
+
+sync:
+  enabled: false
+  schedule: "*/10 * * * *" # every 10 minutes
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  eoapiUrl: ""
+  pygeoapiUrl: ""
+  create: true
+  update: true
+  delete: true
+  forceLinkMimetypeCheck: false
