@@ -77,6 +77,12 @@ def validate_links(links: list[dict], extract_missing_mimetypes: bool) -> list[d
     return validated_links
 
 
+def is_renderable(collection: dict) -> bool:
+    return collection.get(RENDER_EXTENSION_NAME) or collection.get(
+        "item_assets", {}
+    ).get(VISUAL_ASSET_NAME, False)
+
+
 def main():
     parser = argparse.ArgumentParser(
         prog="pygeoapi-stacapi-sync",
@@ -138,11 +144,8 @@ def main():
             is_pygeoapi_resource = pygeoapi_resources.get(collection["id"], False)
             if not is_pygeoapi_resource:
                 continue
-            is_collection_renderable = collection.get(
-                RENDER_EXTENSION_NAME
-            ) or collection.get("item_assets", {}).get(VISUAL_ASSET_NAME, False)
             has_pygeoapi_resource = pygeoapi_resources.get(collection["id"], False)
-            if not has_pygeoapi_resource and is_collection_renderable:
+            if not has_pygeoapi_resource and is_renderable(collection):
                 LOGGER.info(f"Creating collection {collection['id']} in pygeoapi")
 
                 description = collection.get("description", "")
@@ -193,17 +196,12 @@ def main():
     # extension or visual asset
     if delete:
         collection_ids = {
-            collection["id"] for collection in stac_collections["collections"]
+            collection["id"]
+            for collection in stac_collections["collections"]
+            if is_renderable(collection)
         }
         resource_ids = set(pygeoapi_resources.keys())
-        collections_to_delete = list(resource_ids - collection_ids)
-
-        for collection in stac_collections["collections"]:
-            collection_renderable = collection.get(
-                RENDER_EXTENSION_NAME
-            ) or collection.get("item_assets", {}).get(VISUAL_ASSET_NAME)
-            if not collection_renderable:
-                collections_to_delete.append(collection["id"])
+        collections_to_delete = list(collection_ids - resource_ids)
 
         for id in collections_to_delete:
             LOGGER.info(f"Deleting collection {id} from pygeoapi")
