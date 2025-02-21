@@ -83,6 +83,20 @@ def is_renderable(collection: dict) -> bool:
     ).get(VISUAL_ASSET_NAME, False)
 
 
+def get_data(eoapi_url: str, pygeoapi_resource_url: str) -> tuple[dict, dict]:
+    # get collections from STAC API
+    r = SESSION.get(f"{eoapi_url}/stac/collections")
+    r.raise_for_status()
+    stac_collections = r.json()
+
+    # get resources from pygeoapi
+    r = SESSION.get(pygeoapi_resource_url)
+    r.raise_for_status()
+    pygeoapi_resources = r.json()
+
+    return stac_collections, pygeoapi_resources
+
+
 def main():
     parser = argparse.ArgumentParser(
         prog="pygeoapi-stacapi-sync",
@@ -127,19 +141,12 @@ def main():
 
     pygeoapi_resource_url = f"{pygeoapi_url}/admin/config/resources"
 
-    # get collections from STAC API
-    r = SESSION.get(f"{eoapi_url}/stac/collections")
-    r.raise_for_status()
-    stac_collections = r.json()
-
-    # get resources from pygeoapi
-    r = SESSION.get(pygeoapi_resource_url)
-    r.raise_for_status()
-    pygeoapi_resources = r.json()
-
     # add collections to STAC API that aren't present as pygeoapi resources that
     # have the render extension or visual asset
     if create:
+        stac_collections, pygeoapi_resources = get_data(
+            eoapi_url, pygeoapi_resource_url
+        )
         for collection in stac_collections["collections"]:
             is_pygeoapi_resource = pygeoapi_resources.get(collection["id"], False)
             if not is_pygeoapi_resource:
@@ -195,6 +202,9 @@ def main():
     # remove data from pygeoapi not in STAC API and that don't have the render
     # extension or visual asset
     if delete:
+        stac_collections, pygeoapi_resources = get_data(
+            eoapi_url, pygeoapi_resource_url
+        )
         collection_ids = {
             collection["id"]
             for collection in stac_collections["collections"]
@@ -213,6 +223,9 @@ def main():
 
     # update metadata in pygeoapi to match STAC API (eg. changed extent, description...)
     if update:
+        stac_collections, pygeoapi_resources = get_data(
+            eoapi_url, pygeoapi_resource_url
+        )
         for collection in stac_collections["collections"]:
             if collection.get(RENDER_EXTENSION_NAME):
                 resource = pygeoapi_resources[collection["id"]]
