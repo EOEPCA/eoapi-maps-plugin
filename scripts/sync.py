@@ -98,6 +98,7 @@ def get_data(eoapi_url: str, pygeoapi_resource_url: str) -> tuple[dict, dict]:
 
 
 def main():
+    LOGGER.info("Starting pygeoapi-stacapi-sync")
     parser = argparse.ArgumentParser(
         prog="pygeoapi-stacapi-sync",
         description="Syncs STAC API collections with pygeoapi resources",
@@ -243,6 +244,8 @@ def main():
                         LOGGER.error(
                             f"Failed to update collection {collection['id']} in pygeoapi. Status code {r.status_code}. Response: {r.text}"
                         )
+
+    LOGGER.info("pygeoapi-stacapi-sync finished")
 
 
 if __name__ == "__main__":
