@@ -9,7 +9,7 @@ LOGGER = logging.getLogger("pygeoapi-stacapi-sync")
 SESSION = requests.Session()
 retries = Retry(total=5, backoff_factor=0.1, status_forcelist=[500, 502, 503, 504])
 SESSION.mount("http://", HTTPAdapter(max_retries=retries))
-RENDER_EXTENSION_NAME = "render"
+RENDER_EXTENSION_NAME = "renders"
 VISUAL_ASSET_NAME = "visual"
 
 
