@@ -161,23 +161,28 @@ def main():
                 collection_id = collection["id"]
                 title = collection["title"]
 
+                # TODO: handle multiple bboxes if relevant
+                bbox = collection["extent"]["spatial"]["bbox"][0]
+
+                interval = collection["extent"]["temporal"]["interval"]
+
+                data_url = f"{eoapi_url}/stac/collections/{collection_id}"
+
                 json = {
                     collection["id"]: {
                         "description": description,
                         "extents": {
                             "spatial": {
-                                "bbox": collection["extent"]["spatial"]["bbox"][0],
+                                "bbox": bbox,
                                 "crs": "http://www.opengis.net/def/crs/OGC/1.3/CRS84",
                             },
-                            "temporal": {
-                                "interval": collection["extent"]["temporal"]["interval"]
-                            },
+                            "temporal": {"interval": interval},
                         },
                         "keywords": keywords,
                         "links": links,
                         "providers": [
                             {
-                                "data": f"{eoapi_url}/stac/collections/{collection_id}",
+                                "data": data_url,
                                 "format": {
                                     "mimetype": "application/png",
                                     "name": "png",
@@ -197,7 +202,7 @@ def main():
                         f"Failed to create collection {collection['id']} in pygeoapi. Status code {r.status_code}. Response: {r.text}"
                     )
 
-    # remove data from pygeoapi not in STAC API and that don't have the render
+    # remove data from pygeoapi not in STAC API or that don't have the render
     # extension or visual asset
     if delete:
         stac_collections, pygeoapi_resources = get_data(
@@ -230,7 +235,7 @@ def main():
             eoapi_url, pygeoapi_resource_url
         )
         for collection in stac_collections["collections"]:
-            if collection.get(RENDER_EXTENSION_NAME):
+            if is_renderable(collection):
                 resource = pygeoapi_resources[collection["id"]]
                 diff = get_stacapi_pygeoapi_diff(collection, resource, collection["id"])
 
