@@ -1,8 +1,0 @@
-apiVersion: v2
-name: eoapi-maps-plugin
-description: A Helm chart containing a deployment of pygeoapi and eoapi-maps-plugin
-
-type: application
-
-version: 0.0.11
-appVersion: 0.0.9
