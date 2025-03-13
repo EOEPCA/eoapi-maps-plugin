@@ -1,11 +1,11 @@
 name: Build and publish Docker image
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
     tags:
       - "*"
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
 jobs:
   push_to_registry:
     name: Build and push Docker image to Docker Hub
