@@ -84,15 +84,17 @@ class EOAPIProvider(BaseProvider):
                 response_text, user_msg=f"Bad request: {response_text}"
             )
 
-    def _get_render_data(
-        self, collection: dict, style: str = "default", fallback_asset: str = "visual"
-    ) -> dict:
-        if assets := collection.get("renders", {}).get(style, {}).get("assets"):
+    def _get_render_data(self, collection: dict, style: str = "default") -> dict:
+        if renders := collection.get("renders", {}):
+            if not renders.get(style):
+                style = next(r for r in collection["renders"].keys())
+
+            assets = collection["renders"][style].get("assets")
             colormap_name = collection["renders"][style].get("colormap_name")
             resampling = collection["renders"][style].get("resampling")
             expression = collection["renders"][style].get("expression")
             render_data = {
-                "assets": assets,
+                "assets[]": assets,
                 "colormap_name": colormap_name,
                 "resampling": resampling,
                 "expression": expression,
