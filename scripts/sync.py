@@ -72,6 +72,9 @@ def validate_links(links: list[dict], extract_missing_mimetypes: bool) -> list[d
             else:
                 link["type"] = "application/octet-stream"
 
+        if not link.get("title"):
+            link["title"] = ""
+
         validated_links.append(link)
 
     return validated_links
