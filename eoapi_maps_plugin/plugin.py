@@ -6,6 +6,9 @@ from pygeoapi.provider.base import (
 )
 import requests
 from urllib.parse import urlparse
+import logging
+
+LOGGER = logging.getLogger(__name__)
 
 
 class EOAPIProvider(BaseProvider):
@@ -44,6 +47,7 @@ class EOAPIProvider(BaseProvider):
         }
         eoapi_search_url = f"{eoapi_raster_url}/searches/register"
         response = requests.post(eoapi_search_url, json=search_data)
+        LOGGER.debug(f"POST: {response.url} with {search_data}")
         self._handle_upstream_error(response.text, response.status_code)
 
         search_id = response.json()["id"]
@@ -63,6 +67,7 @@ class EOAPIProvider(BaseProvider):
             ),
             params=render_data,
         )
+        LOGGER.debug(f"GET: {response.url}")
         self._handle_upstream_error(response.text, response.status_code)
 
         return response.content

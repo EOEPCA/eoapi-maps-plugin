@@ -46,9 +46,6 @@ def get_stacapi_pygeoapi_diff(
     if collection.get("keywords", []) != pygeoapi_resource["keywords"]:
         diff["keywords"] = collection["keywords"]
 
-    if collection["links"] != pygeoapi_resource["links"]:
-        diff["links"] = collection["links"]
-
     if collection["title"] != pygeoapi_resource["title"]:
         diff["title"] = collection["title"]
 
