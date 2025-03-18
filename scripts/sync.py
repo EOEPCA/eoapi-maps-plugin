@@ -8,7 +8,6 @@ handler = logging.StreamHandler()
 formatter = logging.Formatter("%(asctime)s [%(name)-12s] %(levelname)-8s %(message)s")
 handler.setFormatter(formatter)
 LOGGER.addHandler(handler)
-LOGGER.setLevel(logging.INFO)
 
 SESSION = requests.Session()
 retries = Retry(total=5, backoff_factor=0.1, status_forcelist=[500, 502, 503, 504])
@@ -146,6 +145,11 @@ def main():
         action="store_true",
         help="Extract mimetypes for missing links",
     )
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Set log level to debug",
+    )
 
     args = parser.parse_args()
 
@@ -155,6 +159,12 @@ def main():
     delete = args.delete
     update = args.update
     extract_missing_mimetypes = args.extract_missing_mimetypes
+    debug = args.debug
+
+    if debug:
+        LOGGER.setLevel(logging.DEBUG)
+    else:
+        LOGGER.setLevel(logging.INFO)
 
     pygeoapi_resource_url = f"{pygeoapi_url}/admin/config/resources"
 
@@ -201,7 +211,7 @@ def main():
                             {
                                 "data": data_url,
                                 "format": {
-                                    "mimetype": "application/png",
+                                    "mimetype": "image/png",
                                     "name": "png",
                                 },
                                 "name": "eoapi_maps_plugin.EOAPIProvider",
