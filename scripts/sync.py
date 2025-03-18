@@ -34,10 +34,12 @@ def get_stacapi_pygeoapi_diff(
             diff["extent"] = {}
         diff["extent"]["spatial"] = collection["extent"]["spatial"]
 
-    stacapi_interval = collection["extent"]["temporal"]["interval"]
-    pygeoapi_interval = (
-        pygeoapi_resource.get("extents", {}).get("temporal", {}).get("interval", None)
+    stacapi_interval = collection["extent"]["temporal"]["interval"][0]
+    pygeoapi_begin = (
+        pygeoapi_resource.get("extents", {}).get("temporal", {}).get("begin")
     )
+    pygeoapi_end = pygeoapi_resource.get("extents", {}).get("temporal", {}).get("end")
+    pygeoapi_interval = [pygeoapi_begin, pygeoapi_end]
     if stacapi_interval != pygeoapi_interval:
         if not diff.get("extent"):
             diff["extent"] = {}
@@ -164,7 +166,8 @@ def main():
                 # TODO: handle multiple bboxes if relevant
                 bbox = collection["extent"]["spatial"]["bbox"][0]
 
-                interval = collection["extent"]["temporal"]["interval"]
+                begin_datetime = collection["extent"]["temporal"]["interval"][0][0]
+                end_datetime = collection["extent"]["temporal"]["interval"][0][1]
 
                 data_url = f"{eoapi_url}/stac/collections/{collection_id}"
 
@@ -176,7 +179,7 @@ def main():
                                 "bbox": bbox,
                                 "crs": "http://www.opengis.net/def/crs/OGC/1.3/CRS84",
                             },
-                            "temporal": {"interval": interval},
+                            "temporal": {"begin": begin_datetime, "end": end_datetime},
                         },
                         "keywords": keywords,
                         "links": links,
