@@ -99,11 +99,14 @@ class EOAPIProvider(BaseProvider):
             resampling = collection["renders"][style].get("resampling")
             expression = collection["renders"][style].get("expression")
             render_data = {
-                "assets[]": assets,
                 "colormap_name": colormap_name,
                 "resampling": resampling,
                 "expression": expression,
             }
+            if expression:
+                render_data["expression"] = expression
+            else:
+                render_data["assets"] = assets
         elif collection.get("item_assets", {}).get(self.FALLBACK_ASSET):
             render_data = {"assets": [self.FALLBACK_ASSET]}
         else:

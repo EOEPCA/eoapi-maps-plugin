@@ -23,9 +23,13 @@ def get_stacapi_pygeoapi_diff(
     diff = {}
     if collection["id"] != collection_id:
         diff["id"] = collection["id"]
+        LOGGER.debug(
+            f"Collection id changed from {collection_id} to {collection['id']}"
+        )
 
     if collection["description"] != pygeoapi_resource["description"]:
         diff["description"] = collection["description"]
+        LOGGER.debug(f"Description updated")
 
     stacapi_bbox = collection["extent"]["spatial"]["bbox"][0]
     pygeoapi_bbox = pygeoapi_resource["extents"]["spatial"]["bbox"]
@@ -33,6 +37,7 @@ def get_stacapi_pygeoapi_diff(
         if not diff.get("extent"):
             diff["extent"] = {}
         diff["extent"]["spatial"] = collection["extent"]["spatial"]
+        LOGGER.debug(f"Bbox updated from {pygeoapi_bbox} to {stacapi_bbox}")
 
     stacapi_interval = collection["extent"]["temporal"]["interval"][0]
     pygeoapi_begin = (
@@ -44,12 +49,21 @@ def get_stacapi_pygeoapi_diff(
         if not diff.get("extent"):
             diff["extent"] = {}
         diff["extent"]["temporal"] = collection["extent"]["temporal"]
+        LOGGER.debug(
+            f"Temporal interval updated from {pygeoapi_interval} to {stacapi_interval}"
+        )
 
     if collection.get("keywords", []) != pygeoapi_resource["keywords"]:
         diff["keywords"] = collection["keywords"]
+        LOGGER.debug(
+            f"Keywords updated from {pygeoapi_resource['keywords']} to {collection['keywords']}"
+        )
 
     if collection["title"] != pygeoapi_resource["title"]:
         diff["title"] = collection["title"]
+        LOGGER.debug(
+            f"Title updated from {pygeoapi_resource['title']} to {collection['title']}"
+        )
 
     return diff
 
@@ -238,8 +252,14 @@ def main():
             eoapi_url, pygeoapi_resource_url
         )
         for collection in stac_collections["collections"]:
-            if is_renderable(collection):
-                resource = pygeoapi_resources[collection["id"]]
+            is_pygeoapi_resource = pygeoapi_resources.get(collection["id"], False)
+            if is_pygeoapi_resource and is_renderable(collection):
+                resource = pygeoapi_resources.get(collection["id"])
+                if not resource:
+                    LOGGER.info(
+                        f"Collection {collection['id']} not found in pygeoapi, will be created at next cycle"
+                    )
+                    continue
                 diff = get_stacapi_pygeoapi_diff(collection, resource, collection["id"])
 
                 if diff:
