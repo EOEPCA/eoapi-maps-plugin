@@ -105,7 +105,7 @@ class EOAPIProvider(BaseProvider):
             }
             if expression:
                 render_data["expression"] = expression
-                render_data["asset_as_bands"] = "true"
+                render_data["asset_as_band"] = "True"
             else:
                 render_data["assets"] = assets
         elif collection.get("item_assets", {}).get(self.FALLBACK_ASSET):
